@@ -4,3 +4,4 @@ g++ -std=c++20 -fmodules-ts -xc++-system-header typeinfo
 g++ -std=c++20 -fmodules-ts -xc++-system-header fstream
 g++ -std=c++20 -fmodules-ts -xc++-system-header sstream
 g++ -std=c++20 -fmodules-ts -xc++-system-header vector
+g++ -std=c++20 -fmodules-ts -xc++-system-header numeric

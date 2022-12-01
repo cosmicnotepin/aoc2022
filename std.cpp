@@ -6,3 +6,4 @@ export import <typeinfo>;
 export import <fstream>;
 export import <sstream>;
 export import <vector>;
+export import <numeric>;
