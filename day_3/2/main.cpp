@@ -49,6 +49,14 @@ uint run(std::string filename)
 
 int main(int argc, char** argv)
 {
+    std::vector<uint> blah = {1};
+    std::cout<<"size: "<<blah.size()<<'\n';
+    for (auto e : blah)
+        std::cout<<"e : "<<e <<'\n';
+
+    std::cout<<"beyond: "<<blah[1]<<'\n';
+    std::cout<<"size: "<<blah.size()<<'\n';
+
     std::cout<<"input_t1 score: "<<run("input_t1")<<'\n';
     std::cout<<"input score: "<<run("input")<<'\n';
 }

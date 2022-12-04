@@ -33,3 +33,6 @@
 
 #module stuff
 gcm.cache/
+
+#cmake
+build/
