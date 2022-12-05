@@ -10,10 +10,8 @@
 
 typedef unsigned int uint;
 
-class Move
+struct Move
 {
-    public:
-        Move(uint c, uint f, uint t): count{c}, from{f}, to{t} {}
         uint count;
         uint from;
         uint to;
@@ -107,7 +105,9 @@ std::string run(std::string const filename)
         std::string line;  
         getline(ifs, line);
         std::regex_match(line, sm, moves_re);
-        moves.push_back(Move(stoul(sm[1]), stoul(sm[2]) - 1, stoul(sm[3]) - 1));
+        moves.push_back(Move {.count = (uint)stoul(sm[1]), 
+                              .from = (uint)stoul(sm[2]) - 1, 
+                              .to = (uint)stoul(sm[3]) - 1});
     }
     execute(moves, stacks);
     visualize(stacks);
