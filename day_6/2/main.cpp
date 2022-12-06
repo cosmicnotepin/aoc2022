@@ -34,7 +34,7 @@ uint run(std::string const filename)
                         goto next_pos_in_line;
                 }
             }
-            return i + 13 + 1; //index + 3: index of last element of 4-Block starting at i, +1 because of 1-based counting
+            return i + 13 + 1; //index + 13: index of last element of 14-Block starting at i, +1 because of 1-based counting
             next_pos_in_line:;
         }
     }
