@@ -26,12 +26,15 @@ class Patch
             y{y}
         {};
 
+        bool operator ==(const Patch & rhs) const {return this->x == rhs.x && this->y == rhs.y;};
+        bool operator !=(const Patch & rhs) const {return !(*this==rhs);};
+        //bool operator <(const Patch & rhs) const {return this->pathlength < rhs.pathlength;};
+
         char height;
         luint x;
         luint y;
         luint pathlength = ULONG_MAX;
-        luint prev_x;
-        luint prev_y;
+        Patch * previous;
 };
 
 class Patch_Compare
@@ -59,9 +62,9 @@ luint path_length(const std::vector<std::vector<Patch>>& map, const Patch * end,
 {
     const Patch* current = end;
     luint steps = 0;
-    while (!(current->x == start->x && current->y == start->y))
+    while (*current != *start)
     {
-        current = &map[current->prev_y][current->prev_x];
+        current = current->previous;
         ++steps;
     }
     return steps;
@@ -76,7 +79,7 @@ luint shortest_path_length(std::vector<std::vector<Patch>>& map, Patch * start, 
     {
         Patch* current = *todo.begin();
         todo.erase(todo.begin());
-        if (current->x == end->x and current->y == end->y)
+        if (*current == *end)
             return path_length(map, current, start);
         auto neighbours = get_neighbours(map, *current);
         for (Patch*  neighbour : neighbours)
@@ -84,8 +87,7 @@ luint shortest_path_length(std::vector<std::vector<Patch>>& map, Patch * start, 
             if (current->height >= neighbour->height - 1 && neighbour->pathlength > current->pathlength + 1)
             {
                 neighbour->pathlength = current->pathlength + 1;
-                neighbour->prev_x = current->x;
-                neighbour->prev_y = current->y;
+                neighbour->previous = current;
                 todo.insert(neighbour);
             }
         }
