@@ -67,7 +67,7 @@ class List_Element
             {
                 this->children.push_back(std::make_unique<List_Element>(*(c.get())));
             }
-        };
+        }
 
         List_Element& operator=(const List_Element& rhs) 
         {
@@ -78,13 +78,13 @@ class List_Element
                 this->children.push_back(std::make_unique<List_Element>(*(c.get())));
             }
             return *this;
-        };
+        }
 
         List_Element(int value) : value{value} {};
         List_Element(std::unique_ptr<List_Element> && only_child) 
         {
             children.push_back(std::move(only_child));
-        };
+        }
 
         List_Element(std::string s)
         {
@@ -106,19 +106,9 @@ class List_Element
                 this->value = stoi(s);
                 //std::cout<<"made simple element with value: "<<value<<'\n';
             }
-        };
-
-        auto operator<(const List_Element & rhs) -> bool
-        {
-            return ((*this<=>rhs) == std::strong_ordering::less);
         }
 
-        auto operator==(const List_Element & rhs) -> bool
-        {
-            return ((*this<=>rhs) == std::strong_ordering::equal);
-        }
-
-        auto operator<=>(const List_Element & rhs) -> std::strong_ordering
+        auto operator<=>(const List_Element & rhs) const
         {
             if (this->value != -1 && rhs.value != -1)
             {
@@ -162,7 +152,13 @@ class List_Element
                 //list is left, package right in list
                 return *this <=> List_Element(std::make_unique<List_Element>(rhs.value));
             }
-        };
+        }
+
+        bool operator==(const List_Element & rhs) const
+        {
+            return ((*this<=>rhs) == std::strong_ordering::equal);
+        }
+
 
         int value = -1;
         std::vector<std::unique_ptr<List_Element>> children;
@@ -189,7 +185,8 @@ luint run(std::string const filename)
         all.push_back(le2);
         std::getline(ifs, line);
     }
-    std::sort(all.begin(), all.end());
+    //std::sort(all.begin(), all.end());
+    std::ranges::sort(all);
 
     luint ret = 1;
     for (size_t i=0; i< all.size(); ++i)
