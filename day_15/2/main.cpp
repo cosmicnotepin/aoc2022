@@ -136,6 +136,10 @@ int main(int argc, char** argv)
 {
     auto test_result = run("input_t1", 20);
     std::cout<<"input_t1 result: "<<test_result<<'\n';
+    auto start = std::chrono::steady_clock::now();
     auto result = run("input", 4000000);
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+        std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
     std::cout<<"input result: "<<result<<'\n';
 }
