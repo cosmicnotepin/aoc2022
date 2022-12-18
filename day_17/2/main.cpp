@@ -21,6 +21,28 @@ typedef long unsigned int luint;
 typedef std::vector<std::vector<bool>> Rock;
 
 std::string gusts;
+int last_gust = 0;
+int last_rock = 0;
+
+void print(std::vector<std::vector<char>> & map, int is, int js, int dist)
+{
+    std::cout<<"\n\n";
+    std::cout<<"at i: \n";
+    for (int i = is; i>=is-dist; --i)
+    {
+        for (auto column : map[i])
+            std::cout<<column;
+        std::cout<<'\n';
+    }
+    std::cout<<"\nat j: \n";
+
+    for (int i = js; i>=js-dist; --i)
+    {
+        for (auto column : map[i])
+            std::cout<<column;
+        std::cout<<'\n';
+    }
+}
 
 void print(std::vector<std::vector<char>> & map)
 {
@@ -71,7 +93,6 @@ Rock get_next_rock()
         {{true,true},
         {true,true}}
     };
-    static size_t last_rock = 0;
     Rock ret = rocks[last_rock];
     last_rock = (last_rock + 1) % rocks.size();
     return ret;
@@ -79,10 +100,7 @@ Rock get_next_rock()
 
 char get_next_gust()
 {
-    static size_t last_gust = 0;
-
     char ret = gusts[last_gust];
-    //std::cout<<ret;
     last_gust = (last_gust + 1) % gusts.size();
     return ret;
 }
@@ -93,7 +111,6 @@ int get_top_rock_y(std::vector<std::vector<char>> & map)
         for (int x=1; x<(int)map[0].size()-1; ++x)
             if (map[y][x] != '.')
             {
-                std::cout<<map[y][x];
                 return y;
             }
     std::cerr<<"map has no bottom";
@@ -110,7 +127,7 @@ bool check(std::vector<std::vector<char>>&  map, Rock rock, int x, int y)
     return true;
 }
 
-void drop_rock(std::vector<std::vector<char>>&  map)
+void drop_rock(std::vector<std::vector<char>>&  map, std::vector<std::valarray<int>> & state, std::vector<int> & heights)
 {
     Rock rock = get_next_rock();
     int top_rock_y = get_top_rock_y(map);
@@ -149,6 +166,8 @@ void drop_rock(std::vector<std::vector<char>>&  map)
         }
         //print(map,rock,x,y);
     }
+    state.push_back(std::valarray {x, last_gust, last_rock});
+    heights.push_back(y+rock.size());
     for (int yp=0; yp<(int)rock.size(); ++yp)
         for (int xp=0; xp<(int)rock[0].size(); ++xp)
             if (rock[yp][xp])
@@ -163,11 +182,46 @@ luint run(std::string const filename)
 
     std::vector<std::vector<char>> map(1, std::vector<char> {'+', '-', '-', '-', '-', '-', '-', '-', '+'} );
 
-    for (int i = 0; i< 2022; ++i)
+    std::vector<std::valarray<int>> state;
+    std::vector<int> heights;
+    for (int i = 0; i< 200022; ++i)
     {
-        drop_rock(map);
+        drop_rock(map, state, heights);
         //print(map);
     }
+
+    //for (int i = 0; i< (int)state.size()-1-20; ++i)
+    int i = 1000;
+    int period = 0;
+    int last_period = 0;
+    int pccounter = 0;
+    int last_j = 0;
+    int test_dist = 100;
+        for (int j = i+1; j< (int)state.size()-test_dist; ++j)
+        {
+            for (int o = 0; o<test_dist; ++o)
+            {
+                if((state[i+o] != state[j+o]).max())
+                    goto skip;
+                //auto gah = (state[i+o] != state[j+o]);
+                //for (int arg = 0; arg<(int)gah.size(); ++arg)
+                //    std::cout<<gah[arg];
+                //std::cout<<'\n';
+                //std::cout<<state[i+o][0]<<state[j+o][0]<<'\n';
+                //std::cout<<state[i+o][1]<<state[j+o][1]<<'\n';
+                //std::cout<<state[i+o][2]<<state[j+o][2]<<'\n';
+            }
+            print(map, heights[i], heights[j], 20);
+            period = j-last_j;
+            last_j = j;
+            if (last_period != period)
+                ++pccounter;
+            last_period = period;
+            std::cout<<j-i<<'\n';
+            ;
+skip:       ;
+        }
+        std::cout<<"pccounter: "<<pccounter<<'\n';
 
     return get_top_rock_y(map);
 }
