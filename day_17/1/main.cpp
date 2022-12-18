@@ -84,7 +84,7 @@ bool check(std::vector<std::vector<char>>&  map, Rock rock, size_t x, size_t y)
 {
     for (size_t yp=0; yp<rock.size(); ++yp)
         for (size_t xp=0; xp<rock[0].size(); ++xp)
-            if (rock[yp][xp] == true && map[yp + y][xp + x] != '.')
+            if (rock[yp][xp] && map[yp + y][xp + x] != '.')
                 return false;
 
     return true;
@@ -128,7 +128,7 @@ void drop_rock(std::vector<std::vector<char>>&  map)
     }
     for (size_t yp=0; yp<rock.size(); ++yp)
         for (size_t xp=0; xp<rock[0].size(); ++xp)
-            if (rock[yp][xp] == true)
+            if (rock[yp][xp])
                 map[yp + y][xp + x] = '#';
 
 }
