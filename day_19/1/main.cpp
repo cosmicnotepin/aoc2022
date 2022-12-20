@@ -16,6 +16,7 @@
 #include <limits>
 #include <algorithm>
 #include <valarray>
+#include <cstdint>
 
 typedef long unsigned int luint;
 template <typename T> int sgn(T val) {
@@ -25,16 +26,16 @@ template <typename T> int sgn(T val) {
 struct State 
 {
     State(int time, int ore_r, int next_op) : time(time), ore_r(ore_r), next_op(next_op) {};
-    int time = 0;
-    int geodes = 0;
-    int geodes_r = 0;
-    int obs = 0;
-    int obs_r = 0;
-    int clay = 0;
-    int clay_r = 0;
-    int ore = 0;
-    int ore_r = 0;
-    int next_op = 0;
+    short int time = 0;
+    short int geodes = 0;
+    short int geodes_r = 0;
+    short int obs = 0;
+    short int obs_r = 0;
+    short int clay = 0;
+    short int clay_r = 0;
+    short int ore = 0;
+    short int ore_r = 0;
+    short int next_op = 0;
     auto operator<=>(const State & rhs) const = default;
     //{
     //    auto ti = time<=>rhs.time;
@@ -78,11 +79,14 @@ std::vector<std::function<bool(State&)>> ops;
 
 int dfs(State s)
 {
-    //static std::map<State, int> tab;
-    //auto old = tab.find(s);
-    //if ( old != tab.end())
-    //    return (*old).second;
-    //State old_state = s;
+    static std::map<State, int> tab;
+    static int min_time = 24 - 14;
+    auto old = tab.find(s);
+    if ( old != tab.end())
+        return (*old).second;
+    State old_state {0,0,0};
+    if (s.time >= min_time)
+        old_state = s;
     if (ops[s.next_op](s))
     {
         int max = 0;
@@ -91,10 +95,12 @@ int dfs(State s)
             s.next_op = i;
             max = std::max(max, dfs(s));
         }
-        //tab[old_state] = max;
+        if (s.time >= min_time)
+            tab[old_state] = max;
         return max;
     }
-    //tab[old_state] = s.geodes;
+    if (s.time >= min_time)
+        tab[old_state] = s.geodes;
     return s.geodes;
 }
 
@@ -201,6 +207,29 @@ luint run(std::string const filename)
 
 int main(int argc, char** argv)
 {
+    unsigned long long int ram = 32000000000;
+    int depth = 1;
+    unsigned long long int usage = sizeof(State);
+    std::cout<<"usage : "<<usage <<'\n';
+    while (usage < ram)
+    {
+        usage *=  5;
+        ++depth;
+        std::cout<<"usage : "<<usage <<'\n';
+    }
+    std::cout<<"depth: "<<depth-1<<'\n';
+    int res = 0;
+    for (int i = 1; i<=24; ++i)
+        res += i;
+    std::cout<<"res: "<<res<<'\n';
+    std::cout<<"sizeof(int): "<<sizeof(int)<<'\n';
+    std::cout<<"std::numeric_limits<int>::max(): "<<std::numeric_limits<int>::max()<<'\n';
+    std::cout<<"sizeof(std::int8_t): "<<sizeof(std::uint8_t)<<'\n';
+    std::cout<<"std::numeric_limits<std::int8_t>::max(): "<<static_cast<int>(std::numeric_limits<std::uint8_t>::max())<<'\n';
+    std::cout<<"sizeof(unsigned char): "<<sizeof(unsigned char)<<'\n';
+    std::cout<<"std::numeric_limits<unsigned char>::max(): "<<std::numeric_limits<unsigned char>::max()<<'\n';
+    std::cout<<"sizeof(short int): "<<sizeof(short int)<<'\n';
+    std::cout<<"std::numeric_limits<short int>::max(): "<<std::numeric_limits<short int>::max()<<'\n';
     auto test_result = run("input_t1");
     std::cout<<"input_t1 result: "<<test_result<<'\n';
     //auto result = run("input");
