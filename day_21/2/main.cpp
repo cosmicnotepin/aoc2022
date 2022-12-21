@@ -35,6 +35,8 @@ llint run(std::string const filename)
     std::regex pat_simp {R"((.+): (\d+))"};
     std::smatch sm;
     monkeys.clear();
+    //every monkey returns a string representation of what he does,
+    //but if he can calculate (no humn) he does 
     while (ifs.peek() != EOF)
     {
         std::string line;
@@ -47,8 +49,8 @@ llint run(std::string const filename)
                 return val;
             };
             monkeys.insert({sm[1], std::function<std::string()> {monkey_do}});
-        } 
-        else {
+        } else 
+        {
             std::regex_match(line, sm, pat);
             std::string op = sm[3];
             std::string lhs = sm[2];
@@ -96,22 +98,21 @@ llint run(std::string const filename)
     };
     monkeys.insert_or_assign("humn", std::function<std::string()> {monkey_do});
 
+    //get string represenation
     std::string res = monkeys["root"]();
-    //std::cout<<res<<'\n';
+
     std::regex pat_res {R"((.*?) == (.*?))"};
     std::smatch sm_res;
     std::regex_match(res, sm_res, pat_res);
-    //std::cout<<"succ : "<<succ <<'\n';
+
     std::string to_peel = sm_res[1];
-    //std::cout<<"to_peel : "<<to_peel <<'\n';
     llint rhs = stoll(sm_res[2]);
-    //std::cout<<"rhs : "<<rhs <<'\n';
-    //std::cout<<"to_peel.substr(-2,2) : "<<to_peel.substr(to_peel.size()-2,2) <<'\n';
+
     std::regex pat_left {R"(\((\d+) (.) (.*))"};
     std::regex pat_right {R"((.+?) (.) (\d+)\))"};
+    //manually peel of layer by layer
     while (to_peel.substr(0,1) == "(")
     {
-        //std::cout<<to_peel<<" == " << rhs<<'\n';
         llint val;
         std::string op;
         if (std::regex_match(to_peel, sm, pat_left))
@@ -121,22 +122,13 @@ llint run(std::string const filename)
             to_peel = sm[3];
             to_peel.pop_back();
             if (op == "+")
-            {
                 rhs -= val;
-            }
             if (op == "-")
-            {
                 rhs = -1 *(rhs-val);
-            }
             if (op == "/")
-            {
                 rhs = val/rhs;
-            }
             if (op == "*")
-            {
                 rhs = rhs/val;
-            }
-
         } else
         {
             std::regex_match(to_peel, sm, pat_right);
@@ -145,25 +137,16 @@ llint run(std::string const filename)
             to_peel = sm[1];
             to_peel = to_peel.substr(1);
             if (op == "-")
-            {
                 rhs += val;
-            }
             if (op == "/")
-            {
                 rhs *= val;
-            }
             if (op == "+")
-            {
                 rhs -= val;
-            }
             if (op == "*")
-            {
                 rhs /= val;
-            }
         }
 
     }
-    //std::cout<<to_peel<<" == " << rhs<<'\n';
     return rhs;
 }
 

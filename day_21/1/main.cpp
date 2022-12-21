@@ -30,8 +30,6 @@ std::unordered_map<std::string, std::function<llint()>> monkeys;
 llint run(std::string const filename)
 {
     std::ifstream ifs {filename};
-//lzvm: ptgl * wvjc
-//jlbw: 5
     std::regex pat {R"((.+): (.+) (.) (.+))"};
     std::regex pat_simp {R"((.+): (\d+))"};
     std::smatch sm;
