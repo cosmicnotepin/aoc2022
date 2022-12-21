@@ -153,7 +153,7 @@ void dfs(State s)
 }
 
 
-luint run(std::string const filename)
+luint run(std::string const filename, int max_bps)
 {
     std::regex pat {R"( \d+\D)"};
     std::smatch sm;
@@ -167,9 +167,11 @@ luint run(std::string const filename)
         mine(s);
         return true;
     };
-    int qual_level_acc = 0;
-    while (ifs.peek() != EOF)
+    int qual_level_acc = 1;
+    int bps_done = 0;
+    while (ifs.peek() != EOF && bps_done < max_bps)
     {
+        ++bps_done;
         std::string line;
         std::getline(ifs, line);
         auto vals = std::sregex_iterator(line.begin(), line.end(), pat);
@@ -198,11 +200,11 @@ luint run(std::string const filename)
         ops.push_back(get_build_robot_ops({re_ore,re_cla}, {obs_r_o, obs_r_c}, ro_obs));
         ops.push_back(get_build_robot_ops({re_ore,re_obs}, {geodes_r_o, geodes_r_ob}, ro_geo));
         ops.push_back(wait);
-        state_set.clear();
         global_max_geodes = 0;
+        state_set.clear();
         auto start = std::chrono::steady_clock::now();
-        dfs(State(24,1, ops.size()-1));
-        qual_level_acc += bpnr * global_max_geodes;
+        dfs(State(32,1, ops.size()-1));
+        qual_level_acc *= global_max_geodes;
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
@@ -241,8 +243,8 @@ int main(int argc, char** argv)
     //std::cout<<"std::numeric_limits<unsigned char>::max(): "<<std::numeric_limits<unsigned char>::max()<<'\n';
     //std::cout<<"sizeof(short int): "<<sizeof(short int)<<'\n';
     //std::cout<<"std::numeric_limits<short int>::max(): "<<std::numeric_limits<short int>::max()<<'\n';
-    //auto test_result = run("input_t1");
+    //auto test_result = run("input_t1", 2);
     //std::cout<<"input_t1 result: "<<test_result<<'\n';
-    auto result = run("input");
+    auto result = run("input", 3);
     std::cout<<"input result: "<<result<<'\n';
 }
