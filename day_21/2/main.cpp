@@ -15,6 +15,7 @@
 #include <functional>
 #include <limits>
 #include <algorithm>
+#include <chrono>
 #include <valarray>
 
 typedef long unsigned int luint;
@@ -65,42 +66,6 @@ llint run(std::string const filename)
                 auto lm = monkeys[lhs]();
                 auto rm = monkeys[rhs]();
 
-                ////todo division cant be switched
-                //if(rm.substr(0,2) == "(h")
-                //{
-                //    auto sw = lm;
-                //    lm = rm;
-                //    rm = sw;
-                //}
-
-                //if (lm == "humn")
-                //{
-                //    if (op == "+" || op == "-")
-                //        return "(humn " + op + rm + ")"; 
-                //}
-                //if (lm.substr(0,2) == "(h")
-                //{
-                //    std::regex pat_simp {R"((\(humn.*?) (.\d+)\))"};
-                //    std::smatch sm;
-                //    bool succ = std::regex_match(lm, sm, pat_simp);
-                //    std::cout<<"succ : "<<succ <<'\n';
-                //    if (op == "+" || op == "-")
-                //        return std::string(sm[1]) + " " +
-                //            std::to_string(
-                //                    fun(std::stoll(ss(sm[2])),
-                //                        std::stoll(rm))) + ")";
-                //    if (op == "*" || op == "*")
-                //    {
-                //        std::cout<<"ss(sm[2]: "<<ss(sm[2])<<'\n';
-                //        std::cout<<"ss(sm[3]): "<<ss(sm[3])<<'\n';
-                //        std::cout<<"std::stoll(ss(sm[2]): "<<std::stoll(ss(sm[2]) + ss(sm[3]))<<'\n';
-                //        std::cout<<"std::stoll(rm): "<<std::stoll(rm)<<'\n';
-                //        return std::string(sm[1])+op+rm + " " +
-                //            std::to_string(
-                //                    fun(std::stoll(ss(sm[2]) + ss(sm[3])),
-                //                        std::stoll(rm))) + ")";
-                //    }
-                //}
                 try
                 {
                     return std::to_string(fun(std::stoll(lm), std::stoll(rm)));
@@ -132,21 +97,21 @@ llint run(std::string const filename)
     monkeys.insert_or_assign("humn", std::function<std::string()> {monkey_do});
 
     std::string res = monkeys["root"]();
-    std::cout<<res<<'\n';
+    //std::cout<<res<<'\n';
     std::regex pat_res {R"((.*?) == (.*?))"};
     std::smatch sm_res;
-    bool succ = std::regex_match(res, sm_res, pat_res);
-    std::cout<<"succ : "<<succ <<'\n';
+    std::regex_match(res, sm_res, pat_res);
+    //std::cout<<"succ : "<<succ <<'\n';
     std::string to_peel = sm_res[1];
-    std::cout<<"to_peel : "<<to_peel <<'\n';
+    //std::cout<<"to_peel : "<<to_peel <<'\n';
     llint rhs = stoll(sm_res[2]);
-    std::cout<<"rhs : "<<rhs <<'\n';
-    std::cout<<"to_peel.substr(-2,2) : "<<to_peel.substr(to_peel.size()-2,2) <<'\n';
+    //std::cout<<"rhs : "<<rhs <<'\n';
+    //std::cout<<"to_peel.substr(-2,2) : "<<to_peel.substr(to_peel.size()-2,2) <<'\n';
     std::regex pat_left {R"(\((\d+) (.) (.*))"};
     std::regex pat_right {R"((.+?) (.) (\d+)\))"};
     while (to_peel.substr(0,1) == "(")
     {
-        std::cout<<to_peel<<" == " << rhs<<'\n';
+        //std::cout<<to_peel<<" == " << rhs<<'\n';
         llint val;
         std::string op;
         if (std::regex_match(to_peel, sm, pat_left))
@@ -198,14 +163,18 @@ llint run(std::string const filename)
         }
 
     }
-    std::cout<<to_peel<<" == " << rhs<<'\n';
-    return 0;
+    //std::cout<<to_peel<<" == " << rhs<<'\n';
+    return rhs;
 }
 
 int main(int argc, char** argv)
 {
+    auto start = std::chrono::steady_clock::now();
     auto test_result = run("input_t1");
     std::cout<<"input_t1 result: "<<test_result<<'\n';
     auto result = run("input");
     std::cout<<"input result: "<<result<<'\n';
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 }

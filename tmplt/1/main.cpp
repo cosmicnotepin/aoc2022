@@ -16,6 +16,7 @@
 #include <limits>
 #include <algorithm>
 #include <valarray>
+#include <chrono>
 
 typedef long unsigned int luint;
 template <typename T> int sgn(T val) {
@@ -40,8 +41,12 @@ luint run(std::string const filename)
 
 int main(int argc, char** argv)
 {
+    auto start = std::chrono::steady_clock::now();
     auto test_result = run("input_t1");
     std::cout<<"input_t1 result: "<<test_result<<'\n';
     auto result = run("input");
     std::cout<<"input result: "<<result<<'\n';
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 }
