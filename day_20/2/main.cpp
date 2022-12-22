@@ -42,21 +42,17 @@ llint get_insert_loc(llint pos, llint val, llint lsize)
 long long int run(std::string const filename)
 {
     llint dk =  811589153;
-    //llint dk = 1;
     int repeats = 10;
-    //int repeats = 1;
     std::ifstream ifs {filename};
-    //value,index in orig
-    std::list<std::pair<llint,int>> l;
-    std::vector<std::list<std::pair<llint,int>>::iterator> orig;
+    std::list<llint> l;
+    std::vector<std::list<llint>::iterator> orig;
     int zero_i = 0;
     while (ifs.peek() != EOF)
     {
         std::string line;
         std::getline(ifs, line);
         llint val = std::stoll(line) * dk;
-        std::pair<llint,int> el {val, orig.size()};
-        orig.push_back(l.insert(l.end(),el));
+        orig.push_back(l.insert(l.end(),val));
         if (val == 0)
             zero_i = orig.size()-1;
     }
@@ -69,7 +65,7 @@ long long int run(std::string const filename)
             int m_i = std::distance(l.begin(), it);
             auto val = *it;
             l.erase(it);
-            llint insert_i = get_insert_loc(m_i,val.first, l.size());
+            llint insert_i = get_insert_loc(m_i,val, l.size());
             auto iit = l.begin();
             for(int i = 0; i<insert_i; ++i)
                 ++iit;
@@ -89,10 +85,8 @@ long long int run(std::string const filename)
         auto it = l.begin();
         for (int i=0; i<ind; ++i)
             ++it;
-        res += (*it).first;
+        res += *it;
     }
-
-
     return res;
 }
 
