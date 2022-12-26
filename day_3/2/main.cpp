@@ -1,62 +1,48 @@
+//import std;
+
 #include <iostream>
-#include <unordered_map>
-#include <fstream>
+#include <unordered_set>
+#include <set>
 #include <vector>
+#include <fstream>
+#include <algorithm>
 
 typedef unsigned int uint;
 
 uint char2prio(char c)
 {
-    if ((int)c > 96)
-        return (int)c - 96;
+    if ((int)c >= 'a')
+        return (int)c - 'a' + 1;
     else
-        return (int)c - 64 + 26;
+        return (int)c - 'A' + 26 + 1;
 }
 
-uint run(std::string filename)
+unsigned int run(std::string filename)
 {
     std::ifstream ifs {filename};
-    if(!ifs)
-    {
-        std::cerr<<"could not open "<<filename<<'\n';
-        exit(1);
-    }
-
     uint sum_of_prios = 0;
-    while (ifs.peek() != EOF)
+    for (std::string s; getline(ifs, s);)
     {
-        std::vector<uint> shotmap(53, 0);
-        for (uint i=0; i<3; ++i)
-        {
-            std::string s; 
-            getline(ifs, s);
-            for (char c : s)
-            {
-                if (shotmap[char2prio(c)] == i)
-                    shotmap[char2prio(c)] += 1;
-            }
-        }
-        for (size_t i=0; i<shotmap.size(); ++i)
-        {
-            if (shotmap[i] == 3)
-            {
-                sum_of_prios += i;
-            }
-        }
+        std::set<char> s1(s.begin(), s.end());
+        getline(ifs, s);
+        std::set<char> s2(s.begin(), s.end());
+        std::vector<char> inter;
+        //only works as expected on _sorted_ sets!!
+        std::set_intersection(s1.begin(), s1.end(), 
+                s2.begin(), s2.end(), std::back_inserter(inter));
+        getline(ifs, s);
+        std::set<char> s3(s.begin(), s.end());
+        std::ranges::sort(inter);
+        std::vector<char> res;
+        std::set_intersection(inter.begin(), inter.end(), 
+                s3.begin(), s3.end(), std::back_inserter(res));
+        sum_of_prios += char2prio(*(res.begin()));
     }
     return sum_of_prios;
 }
 
 int main(int argc, char** argv)
 {
-    std::vector<uint> blah = {1};
-    std::cout<<"size: "<<blah.size()<<'\n';
-    for (auto e : blah)
-        std::cout<<"e : "<<e <<'\n';
-
-    std::cout<<"beyond: "<<blah[1]<<'\n';
-    std::cout<<"size: "<<blah.size()<<'\n';
-
     std::cout<<"input_t1 score: "<<run("input_t1")<<'\n';
     std::cout<<"input score: "<<run("input")<<'\n';
 }
