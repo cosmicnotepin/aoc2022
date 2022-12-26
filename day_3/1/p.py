@@ -4,7 +4,7 @@ def  main(filename):
         x = len(line)//2
         #dup = ({*line[:x]} & {*line[x:]}).pop() 
         #constructors are not constructors ;)
-        dup = (set(line[:x]) & set(line[x:])).pop()
+        dup, = set(line[:x]) & set(line[x:])
         if (ord(dup) < ord('a')):
             res += ord(dup) - ord('A') + 1 + 26
         else:
