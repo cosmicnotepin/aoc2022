@@ -23,7 +23,8 @@ def  main(filename):
         for i in range(0,co):
             stacks[to].append(stacks[fr].pop())
 
-    print("p1: " + "".join([stacks[l][-1]for l in range(1, len(stacks)+1)]))
+    #print("p1: " + "".join([stacks[l][-1]for l in range(1, len(stacks)+1)]))
+    print("p1: " + "".join([stacks[l][-1]for l in sorted(stacks.keys())]))
     print("p2: " + "".join([p2_stacks[l][-1] for l in range(1, len(stacks)+1)]))
 
 
