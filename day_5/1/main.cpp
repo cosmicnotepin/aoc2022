@@ -1,99 +1,35 @@
 #include <iostream>
-#include <iomanip>
-#include <unordered_map>
+#include <map>
 #include <fstream>
-#include <vector>
 #include <regex>
-#include <stack>
-#include <sstream>
-#include <list>
 
 typedef unsigned int uint;
 
-class Move
+void visualize(std::map<int, std::deque<char>> const stacks)
 {
-    public:
-        Move(uint c, uint f, uint t): count{c}, from{f}, to{t} {}
-        uint count;
-        uint from;
-        uint to;
-};
-
-void execute(std::list<Move> const & moves, std::vector<std::stack<char>>& stacks)
-{
-    for (Move m : moves)
-    {
-        for (uint i=0; i<m.count; ++i)
-        {
-            stacks[m.to].push(stacks[m.from].top());
-            stacks[m.from].pop();
-        }
+    for (auto stack : stacks) {
+        for (auto crate : stack.second)
+            std::cout<<crate;
+        std::cout<<'\n';
     }
 }
 
-void visualize(std::vector<std::stack<char> > const v)
-{
-    for (auto s:v)
-    {
-        std::string line;
-        while (s.size() > 0)
-        {
-            line += s.top();
-            s.pop();
-        }
-        std::reverse(line.begin(), line.end());
-        std::cout<<line<<'\n';
-    }
-}
-
-
-std::string run(std::string const filename)
-{
+void run(std::string const filename) {
     std::ifstream ifs {filename};
-    if(!ifs)
-    {
-        std::cerr<<"could not open "<<filename<<'\n';
-        exit(1);
-    }
+    std::map<int, std::deque<char>> stacks;
 
-    std::stack<std::string> crates;
-    uint number_of_stacks = 0;
-    while (ifs.peek() != EOF)
-    {
-        std::string line; 
-        getline(ifs, line);
+    for (std::string line; getline(ifs, line);) {
         if (line[1] == '1')
-        {
-            std::istringstream iss(line);
-            std::string item;
-            while (std::getline(iss>>std::ws, item, ' '))
-                ;
-            number_of_stacks = stoul(item);
             break;
-        }
-        crates.push(line);
+        for (size_t i = 0; 1+4*i<line.size(); ++i)
+            if(line[1+4*i] != ' ')
+                stacks[i+1].insert(stacks[i+1].begin(),line[1+4*i]);
     }
 
-    std::vector<std::stack<char>> stacks(number_of_stacks);
-    while (crates.size() > 0)
-    {
-        auto line = crates.top();
-        crates.pop();
-        for (uint i=0; i<number_of_stacks; ++i)
-        {
-            char crate = line[i*4 + 1];
-            if (crate != ' ')
-                stacks[i].push(crate);
-        }
-
-    }
-    visualize(stacks);
-
+    auto p2_stacks(stacks);
 
     std::regex moves_re {R"(move (\d+) from (\d+) to (\d+))"};
     std::smatch sm;
-
-    std::list<Move> moves;
     std::string line_trash;
     getline(ifs, line_trash); //throw away empty line
     while (ifs.peek() != EOF)
@@ -101,30 +37,30 @@ std::string run(std::string const filename)
         std::string line;  
         getline(ifs, line);
         std::regex_match(line, sm, moves_re);
-        moves.push_back(Move(stoul(sm[1]), stoul(sm[2]) - 1, stoul(sm[3]) - 1));
+        int count = stoi(sm[1]);
+        int from = stoi(sm[2]);
+        int to = stoi(sm[3]);
+        auto ff = p2_stacks[from].begin() + (p2_stacks[from].size() - count);
+        auto ft = p2_stacks[from].end();
+        p2_stacks[to].insert(p2_stacks[to].end(), ff, ft);
+        p2_stacks[from].erase(ff, ft);
+        while (count--)
+        {
+            stacks[to].push_back(stacks[from].back());
+            stacks[from].pop_back();
+        }
     }
-    execute(moves, stacks);
-    visualize(stacks);
-    std::string ret;
-    for (auto s:stacks)
-    {
-        if(s.size() > 0)
-            ret += s.top();
-    }
-    return ret;
+    std::cout<<"p1: ";
+    for (auto s : stacks)
+        std::cout<<s.second.back();
+    std::cout<<"\np2: ";
+    for (auto s : p2_stacks)
+        std::cout<<s.second.back();
+    std::cout<<'\n';
 }
 
 int main(int argc, char** argv)
 {
-    //std::string blah = "1 2 3 4 5 6 ";
-    //std::regex pat {R"((\d )*)"};
-    //std::smatch sm;
-    //std::regex_match(blah, sm, pat);
-    //for (auto blah : sm)
-    //    std::cout<<blah<<'\n';
-
-    std::string test_result = run("input_t1");
-    std::cout<<"input_t1 score: "<<test_result<<'\n';
-    std::string result = run("input");
-    std::cout<<"input score: "<<result<<'\n';
+    run("input_t1");
+    run("input");
 }
