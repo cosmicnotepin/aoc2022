@@ -1,43 +1,36 @@
 //import std;
 
 #include <iostream>
-#include <unordered_map>
-#include <fstream>
+#include <unordered_set>
+#include <set>
 #include <vector>
+#include <fstream>
+#include <algorithm>
 
 typedef unsigned int uint;
 
 uint char2prio(char c)
 {
-    if ((int)c > 96)
-        return (int)c - 96;
+    if ((int)c >= 'a')
+        return (int)c - 'a' + 1;
     else
-        return (int)c - 64 + 26;
+        return (int)c - 'A' + 26 + 1;
 }
 
 unsigned int run(std::string filename)
 {
     std::ifstream ifs {filename};
-    if(!ifs)
-    {
-        std::cerr<<"could not open "<<filename<<'\n';
-        exit(1);
-    }
     uint sum_of_prios = 0;
     for (std::string s; getline(ifs, s);)
     {
-        std::vector<bool> shotmap(52, false);
-        for(size_t i=0; i<s.size()/2; ++i)
-            shotmap[char2prio(s[i])] = true;
-
-        for(size_t i=s.size()/2; i<s.size(); ++i)
-        {
-            if (shotmap[char2prio(s[i])] == true)
-            {
-                sum_of_prios += char2prio(s[i]);
-                break;
-            }
-        }
+        int x = s.size()/2;
+        std::set<char> s1(s.begin(), s.begin()+x);
+        std::set<char> s2(s.begin()+x, s.end());
+        std::vector<char> res;
+        //only works as expected on _sorted_ sets!!
+        std::set_intersection(s1.begin(), s1.end(), 
+                s2.begin(), s2.end(), std::back_inserter(res));
+        sum_of_prios += char2prio(*(res.begin()));
     }
     return sum_of_prios;
 }
