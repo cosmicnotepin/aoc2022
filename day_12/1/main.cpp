@@ -50,6 +50,7 @@ void run(std::string const filename) {
 
     bool visited[map.size()][map[0].size()];
     memset(visited, 0, map.size()*map[0].size());
+    visited[start.y][start.x] = true;
 
     std::deque<Patch> todo;
     todo.push_back(start);
@@ -78,6 +79,7 @@ void run(std::string const filename) {
     }
     //p2
     memset(visited, 0, map.size()*map[0].size());
+    visited[end.y][end.x] = true;
 
     todo.clear();
     todo.push_back(end);
