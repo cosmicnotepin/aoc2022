@@ -76,6 +76,33 @@ void run(std::string const filename) {
             }
         }
     }
+    //p2
+    memset(visited, 0, map.size()*map[0].size());
+
+    todo.clear();
+    todo.push_back(end);
+    while (todo.size() > 0)
+    {
+        Patch cur = *(todo.begin());
+        todo.erase(todo.begin());
+        if (map[cur.y][cur.x] == 'a') {
+            std::cout<<"p2: "<<cur.pl<<'\n';
+            break;
+        }
+        for (auto d : n) {
+            int nx = cur.x + d[0];
+            int ny = cur.y + d[1];
+            if ( nx >= 0 &&
+                    ny >= 0 &&
+                    nx < (int)map[0].size() &&
+                    ny < (int)map.size() &&
+                    map[cur.y][cur.x] <= map[ny][nx] + 1 &&
+                    !(visited[ny][nx])) {
+                todo.push_back(Patch(nx,ny,cur.pl+1));
+                visited[ny][nx] = true;
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv)
