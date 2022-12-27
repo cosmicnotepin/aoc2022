@@ -17,137 +17,70 @@
 
 typedef long unsigned int luint;
 
-class Patch
+struct Patch
 {
-    public:
-        Patch(char height, luint x, luint y):
-            height{height},
-            x{x},
-            y{y}
-        {};
-
-        char height;
-        luint x;
-        luint y;
-        luint pathlength = ULONG_MAX;
-        luint prev_x;
-        luint prev_y;
+    int x;
+    int y;
+    int pl;
 };
 
-class Patch_Compare
-{
-    public:
-        bool operator()(Patch const * lhs, Patch const * rhs) const {return lhs->pathlength < rhs->pathlength;}
-};
-
-
-std::list<Patch*> get_neighbours(std::vector<std::vector<Patch>>& map, const Patch patch)
-{
-    std::list<Patch*> neighbours;
-    if (patch.x != 0)
-        neighbours.push_back(&map[patch.y][patch.x - 1]);
-    if (patch.y != 0)
-        neighbours.push_back(&map[patch.y - 1][patch.x]);
-    if (patch.x + 1 < map[0].size())
-        neighbours.push_back(&map[patch.y][patch.x + 1]);
-    if (patch.y + 1 < map.size())
-        neighbours.push_back(&map[patch.y + 1][patch.x]);
-    return neighbours;
-}
-
-luint path_length(const std::vector<std::vector<Patch>>& map, const Patch * end, const Patch * start)
-{
-    const Patch* current = end;
-    luint steps = 0;
-    while (!(current->x == start->x && current->y == start->y))
-    {
-        current = &map[current->prev_y][current->prev_x];
-        ++steps;
-    }
-    return steps;
-}
-
-
-luint shortest_path_length(std::vector<std::vector<Patch>>& map, Patch * start, const Patch * end)
-{
-    std::multiset<Patch*, Patch_Compare> todo;
-    todo.insert(start);
-    while (todo.size() > 0)
-    {
-        Patch* current = *todo.begin();
-        todo.erase(todo.begin());
-        if (current->x == end->x and current->y == end->y)
-            return path_length(map, current, start);
-        auto neighbours = get_neighbours(map, *current);
-        for (Patch*  neighbour : neighbours)
-        {
-            if (current->height >= neighbour->height - 1 && neighbour->pathlength > current->pathlength + 1)
-            {
-                neighbour->pathlength = current->pathlength + 1;
-                neighbour->prev_x = current->x;
-                neighbour->prev_y = current->y;
-                todo.insert(neighbour);
-            }
-        }
-    }
-    return 0;
-}
-
-luint run(std::string const filename)
-{
+void run(std::string const filename) {
     std::ifstream ifs {filename};
-    if(!ifs)
-    {
-        std::cerr<<"could not open "<<filename<<'\n';
-        exit(1);
-    }
-
+    Patch start {0, 0, 0};
+    Patch end {0, 0, 0};
+    std::vector<std::string> map;
     size_t y = 0;
-    Patch start {'a', 0, 0};
-    Patch end {'z', 0, 0};
-    std::vector<std::vector<Patch>> map;
-    while (ifs.peek() != EOF)
-    {
-        std::vector<Patch> map_row;
-        std::string line;
-        std::getline(ifs, line);
-        size_t x = 0;
-        for (char c : line)
-        {
-            if (c == 'S')
+    for (std::string line; std::getline(ifs, line);) {
+        for (size_t x=0; x<line.size(); ++x) {
+            if (line[x] == 'S')
             {
                 start.x = x;
                 start.y = y;
-                start.pathlength = 0;
-                map_row.push_back(start);
-            } else if (c == 'E')
+                line[x] = 'a';
+            } else if (line[x] == 'E')
             {
                 end.x = x;
                 end.y = y;
-                map_row.push_back(end);
-            } else
-            {
-                map_row.push_back(Patch(c, x, y));
+                line[x] = 'z';
             }
-            ++x;
         }
-        map.push_back(map_row);
+        map.push_back(line);
         ++y;
     }
 
-    std::cout<<"start: "<<start.x<<", "<<start.y<<'\n';
-    std::cout<<"end: "<<end.x<<", "<<end.y<<'\n';
-    std::cout<<"map_x: "<<map[map.size()-1].size()<<'\n';
-    std::cout<<"map_y: "<<map.size()<<'\n';
-    std::cout<<"N S: "<<get_neighbours(map, start).size()<<'\n';
-    std::cout<<"N E: "<<get_neighbours(map, end).size()<<'\n';
-    return shortest_path_length(map, &start, &end);
+    bool visited[map.size()][map[0].size()];
+    memset(visited, 0, map.size()*map[0].size());
+
+    std::deque<Patch> todo;
+    todo.push_back(start);
+    int n[4][2] {{-1,0},{0,-1},{1,0},{0,1}};
+    while (todo.size() > 0)
+    {
+        Patch cur = *(todo.begin());
+        todo.erase(todo.begin());
+        if (cur.x == end.x and cur.y == end.y) {
+            std::cout<<"p1: "<<cur.pl<<'\n';
+            break;
+        }
+        for (auto d : n) {
+            int nx = cur.x + d[0];
+            int ny = cur.y + d[1];
+            if ( nx >= 0 &&
+                    ny >= 0 &&
+                    nx < (int)map[0].size() &&
+                    ny < (int)map.size() &&
+                    map[cur.y][cur.x] + 1 >= map[ny][nx] &&
+                    !(visited[ny][nx])) {
+                todo.push_back(Patch(nx,ny,cur.pl+1));
+                visited[ny][nx] = true;
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv)
 {
-    auto test_result = run("input_t1");
-    std::cout<<"input_t1 result: "<<test_result<<'\n';
-    auto result = run("input");
-    std::cout<<"input result: "<<result<<'\n';
+    run("input_t1");
+    run("input");
+    
 }
