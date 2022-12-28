@@ -42,13 +42,9 @@ std::vector<std::string> split_outer_level(std::string s)
             continue;
         }
         if (c=='[')
-        {
             ++level;
-        }
         if (c==']')
-        {
             --level;
-        }
         current += c;
     }
     return ret;
@@ -60,59 +56,37 @@ class List_Element
     public:
         List_Element() {};
         List_Element(int value) : value{value} {};
-        List_Element(std::unique_ptr<List_Element> && only_child) 
-        {
+        List_Element(std::unique_ptr<List_Element> && only_child) {
             children.push_back(std::move(only_child));
         };
 
-        List_Element(std::string s)
-        {
+        List_Element(std::string s) {
             if (s == "[]")
-            {
-                //std::cout<<"made empty list element\n";
                 return;
-            }
-            if (s[0] == '[')
-            {
-                for (std::string child_string : split_outer_level(s))
-                {
+
+            if (s[0] == '[') {
+                for (std::string child_string : split_outer_level(s)) {
                     children.push_back(make_unique<List_Element>(child_string));
                 }
-                //std::cout<<"made list element with: "<<children.size()<<" elements\n";
             } 
             else 
-            {
                 this->value = stoi(s);
-                //std::cout<<"made simple element with value: "<<value<<'\n';
-            }
         };
-
-        auto operator<(const List_Element & rhs) -> bool
-        {
-            return ((*this<=>rhs) == std::strong_ordering::less);
-        }
 
         auto operator<=>(const List_Element & rhs) -> std::strong_ordering
         {
             if (this->value != -1 && rhs.value != -1)
-            {
-                //two values
-                //std::cout<<"simple comp:\n'";
-                //std::cout<<"this->value : "<<this->value <<'\n';
-                //std::cout<<"rhs.value: "<<rhs.value<<'\n';
-                //std::cout<<"this->value <=> rhs.value: "<<(this->value <=> rhs.value)<<'\n';
                 return this->value <=> rhs.value;
-            }
+
             if (this->value == -1 && rhs.value == -1)
             {
-                //two lists
                 for (size_t i=0; i<this->children.size(); ++i)
                 {
                     if (i == rhs.children.size())
                         //left list ist longer
                         return std::strong_ordering::greater;
 
-                    std::strong_ordering this_elem = *(this->children[i].get()) <=> *(rhs.children[i].get());
+                    auto this_elem = *(this->children[i].get()) <=> *(rhs.children[i].get());
                     if (this_elem == std::strong_ordering::equal)
                         continue;
                     else
@@ -120,22 +94,20 @@ class List_Element
 
                 }
                 if (this->children.size() < rhs.children.size())
-                    //left shorter
                     return std::strong_ordering::less;
                 else
                     //same size
                     return std::strong_ordering::equal;
             }
             // one list, one value
+            //list is right, package left in in list
             if (this->value != -1)
-            {
-                //list is right, package left in in list
-                return List_Element(std::make_unique<List_Element>(this->value)) <=> rhs;
-            } else
-            {
+                return List_Element(
+                        std::make_unique<List_Element>(this->value)) <=> rhs;
+            else
                 //list is left, package right in list
-                return *this <=> List_Element(std::make_unique<List_Element>(rhs.value));
-            }
+                return *this <=> 
+                    List_Element(std::make_unique<List_Element>(rhs.value));
         };
 
         int value = -1;
@@ -160,7 +132,6 @@ luint run(std::string const filename)
         List_Element le1(line);
         std::getline(ifs, line);
         List_Element le2(line);
-        std::cout<<(le1<=>le2 == std::strong_ordering::less)<<'\n';
         if (le1<=>le2 == std::strong_ordering::less)
             res += pair_number;
 
@@ -173,8 +144,6 @@ luint run(std::string const filename)
 
 int main(int argc, char** argv)
 {
-    std::string blah = "[blah]";
-    std::cout<<blah.substr(1,blah.size() - 2)<<'\n';
     auto test_result = run("input_t1");
     std::cout<<"input_t1 result: "<<test_result<<'\n';
     auto result = run("input");
