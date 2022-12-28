@@ -1,20 +1,8 @@
 #include <iostream>
-#include <cmath>
-#include <iomanip>
-#include <unordered_map>
 #include <fstream>
 #include <vector>
 #include <regex>
-#include <stack>
-#include <queue>
-#include <sstream>
-#include <list>
 #include <string>
-#include <memory>
-#include <set>
-#include <functional>
-#include <limits>
-#include <algorithm>
 
 typedef long unsigned int luint;
 
@@ -24,10 +12,10 @@ template <typename T> int sgn(T val) {
 
 bool insert_sand(auto & map, auto sand, auto & count)
 {
-    static std::vector<std::vector<int>> drops = {{0,1}, {-1,1}, {1,1}};
+    static int drops[3][2] = {{0,1}, {-1,1}, {1,1}};
     if (map[sand[1]][sand[0]] != '.')
         return false;
-    std::vector<luint> sand_pos = sand;
+
     bool moved = true;
     while (moved)
     {
@@ -36,11 +24,10 @@ bool insert_sand(auto & map, auto sand, auto & count)
         {
             int tar_y = sand[1]+drop[1];
             int tar_x = sand[0]+drop[0];
-            if (tar_x < 0 || tar_x >= (int)map[0].size() || tar_y < 0 || tar_y >= (int)map.size())
-            {
-                //dropping off the map
+            //dropping off the map
+            if (tar_x < 0 || tar_x >= (int)map[0].size() ||
+                    tar_y < 0 || tar_y >= (int)map.size())
                 return false;
-            }
             if (map[tar_y][tar_x] == '.') 
             {
                 sand[1] = tar_y;
@@ -57,12 +44,9 @@ bool insert_sand(auto & map, auto sand, auto & count)
 
 void print_map(const auto & map)
 {
-    for (auto row : map)
-    {
+    for (auto row : map) {
         for (auto column : row)
-        {
             std::cout<<column;
-        }
         std::cout<<'\n';
     }
 }
@@ -73,19 +57,16 @@ void insert_rocks(auto & map, std::vector<std::vector<std::vector<luint>>> const
     {
         for (size_t i=0; i<rocks.size() - 1; ++i)
         {
-            std::vector<luint> start = rocks[i];
-            std::vector<luint> end = rocks[i+1];
+            auto start = rocks[i];
+            auto end = rocks[i+1];
             int x_dist = end[0]-start[0];
             int y_dist = end[1]-start[1];
             int x_step = x_dist == 0 ? 1 : sgn(x_dist);
             int y_step = y_dist == 0 ? 1 : sgn(y_dist);
+
             for (int y=start[1]; y!=(int)end[1]+y_step; y+=y_step)
-            {
                 for (int x=start[0]; x!=(int)end[0]+x_step; x+=x_step)
-                {
                     map[y][x] = '#';
-                }
-            }
         }
     }
 }
@@ -99,7 +80,7 @@ luint run(std::string const filename)
         exit(1);
     }
 
-    std::regex pat {R"((\d+),(\d+)(?=( -> )?))"};
+    std::regex pat {R"((\d+),(\d+))"};
     std::smatch sm;
     std::vector<std::vector<std::vector<luint>>> rockss;
     std::vector<luint> sand {500,0};
@@ -107,15 +88,12 @@ luint run(std::string const filename)
     luint max_y = sand[1];
     luint min_x = sand[0];
     luint min_y = sand[1];
-    while (ifs.peek() != EOF)
-    {
+    for (std::string line; std::getline(ifs, line);) {
         std::vector<std::vector<luint>> rocks;
-        std::string line;
-        std::getline(ifs, line);
         std::regex_match(line, sm, pat);
-        for (auto points = std::sregex_iterator(line.begin(), line.end(), pat);
+        for (auto points = 
+                std::sregex_iterator(line.begin(), line.end(), pat);
                 points != std::sregex_iterator(); ++points) {
-            std::cout<<"point would be: ("<<(*points)[1]<<", "<<(*points)[2]<<")\n";
             luint x = std::stoul((*points)[1]);
             luint y = std::stoul((*points)[2]);
             max_x = std::max(max_x, x);
@@ -134,17 +112,14 @@ luint run(std::string const filename)
         {
             rock[0] -= min_x;
             rock[1] -= min_y;
-            std::cout<<"new rock: "<<rock[0]<< ", "<<rock[1]<<'\n';
         }
 
     std::vector<std::vector<char>> map(max_y-min_y + 1, std::vector<char>(max_x-min_x + 1, '.'));
-    print_map(map);
     insert_rocks(map, rockss);
-    print_map(map);
     luint rested_sand = 0;
     while (insert_sand(map, sand, rested_sand))
     {
-        print_map(map);
+        ;
     }
     return rested_sand;
 }
