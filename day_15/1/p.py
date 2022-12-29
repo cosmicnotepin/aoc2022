@@ -63,10 +63,59 @@ def main2(filename, bound):
             print(x*4000000+y)
             break
 
+def main3(filename, bound):
+    f = open(filename, "r")
+    srs = []
+    for line in f:
+        sx, sy, bx, by = map(int, re.findall("-?\d+", line))
+        s_range = abs(sx-bx) + abs(sy-by) + 1
+        # [x,y [[pos,pos][neg,neg]]]
+        # pos/neg : [yaal, yaar]
+        yaalp = sy - (sx - s_range)
+        yaaln = sy + (sx - s_range)
+        yaarp = sy - (sx + s_range)
+        yaarn = sy + (sx + s_range)
+        srs.append([sx,sy,[[yaalp, yaarp], [yaaln, yaarn]], s_range])
+
+    can = set()
+    for i, s1 in enumerate(srs):
+        for s2 in srs[i:]: 
+            if (s1[1] - s2[1]) % 2:
+                continue
+            for aap in s1[2][0]:
+                for aan in s2[2][1]:
+                    x = (aan - aap)//2
+                    y = x + aap
+                    if x>0 and y>0 and x<bound and y<bound:
+                        can.add((x,y))
+
+            for aap in s2[2][0]:
+                for aan in s1[2][1]:
+                    x = (aan - aap)//2
+                    y = x + aap
+                    if x>0 and y>0 and x<bound and y<bound:
+                        can.add((x,y))
+
+    for x,y in can:
+        seen = False
+        for sx,sy,_,sr in srs:
+            if abs(sx-x) + abs(sy-y) < sr:
+                seen = True
+                break
+        if seen:
+            continue
+        else:
+            print(x*4000000+y)
+            break
+
+
+
 
 
 if __name__ == "__main__":
     #main("input_t1", 10)
     #main("input", 2000000)
-    main2("input_t1", 20)
-    main2("input", 4000000)
+    #main2("input_t1", 20)
+    #main2("input", 4000000)
+    main3("input_t1", 20)
+    main3("input", 4000000)
