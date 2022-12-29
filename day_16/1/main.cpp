@@ -28,15 +28,16 @@ int dfs(std::string const & cr, int time, int fsf, size_t visited)
 {
     if (cache[time][cr][visited][fsf] != 0)
         return cache[time][cr][visited][fsf];
-    if (time <= 0)
-        return 0;
     fsf += time * fs[cr];
     int max = fsf;
     for (auto n : dists[cr]) {
         size_t bit = 1L<<name2ind[n.first];
         if (visited & bit)
             continue;
-        max = std::max(max, dfs(n.first, time - n.second - 1, fsf, visited | bit));
+        int rem_t = time - n.second - 1;
+        if (rem_t <= 0)
+            continue;
+        max = std::max(max, dfs(n.first, rem_t, fsf, visited | bit));
     }
     return cache[time][cr][visited][fsf] = max;
 }
