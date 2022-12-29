@@ -14,8 +14,10 @@ def main(filename, row):
         r_dist = abs(sy-row)
         x_left = s_range - r_dist
         if x_left > 0:
-            for x in range(sx-x_left, sx+x_left+1):
-                not_it.add(x)
+            continue
+        for x in range(sx-x_left, sx+x_left+1):
+            not_it.add(x)
+
     print("p1: " + str(len(not_it - beacons)))
 
 def main2(filename, bound):
