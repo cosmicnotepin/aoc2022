@@ -16,24 +16,29 @@ template <typename T> int sgn(T val) {
 std::unordered_map<std::string, int> fs;
 std::unordered_map<std::string, std::vector<std::string>> neighss;
 std::unordered_map<std::string, std::unordered_map<std::string, int>> dists;
+std::map<std::string, int> name2ind;
+
+std::unordered_map<int, 
+    std::unordered_map<std::string, 
+    std::unordered_map<size_t, 
+    std::unordered_map<int, int>>>> cache;
 
 
-int dfs(std::string const & cr, std::unordered_map<std::string, bool> vss,
-        int time, int fsf, std::unordered_set<std::string> visited)
+int dfs(std::string const & cr, int time, int fsf, size_t visited)
 {
+    if (cache[time][cr][visited][fsf] != 0)
+        return cache[time][cr][visited][fsf];
     if (time <= 0)
         return 0;
-    vss[cr] = true;
     fsf += time * fs[cr];
     int max = fsf;
     for (auto n : dists[cr]) {
-        if (!visited.contains(n.first)) {
-            std::unordered_set<std::string> vc(visited); 
-            vc.insert(n.first);
-            max = std::max(max, dfs(n.first, vss, time - n.second - 1, fsf, vc));
-        }
+        size_t bit = 1L<<name2ind[n.first];
+        if (visited & bit)
+            continue;
+        max = std::max(max, dfs(n.first, time - n.second - 1, fsf, visited | bit));
     }
-    return max;
+    return cache[time][cr][visited][fsf] = max;
 }
 
 luint run(std::string const filename)
@@ -49,15 +54,8 @@ luint run(std::string const filename)
     std::smatch sm;
     std::regex pat2 {R"((\S\S),?)"};
     std::smatch sm2;
-    std::unordered_map<std::string, bool> vss;
 
-    fs.clear();
-    neighss.clear();
-    dists.clear();
-    while (ifs.peek() != EOF) {
-        std::vector<std::vector<luint>> rocks;
-        std::string line;
-        std::getline(ifs, line);
+    for (std::string line; std::getline(ifs, line);) {
         std::regex_match(line, sm, pat);
         std::string valvename = sm[1];
         fs.insert({valvename, stoi(sm[2])});
@@ -94,6 +92,10 @@ luint run(std::string const filename)
         }
     }
 
+    int i = 0;
+    for (auto ds : dists)
+        name2ind.insert({ds.first, i++});
+
     //for (auto ds : dists) {
     //    std::cout<<ds.first<<": [";
     //    for (auto d : ds.second)
@@ -101,9 +103,7 @@ luint run(std::string const filename)
     //    std::cout<<"]\n";
     //}
 
-    std::string start_pos = "AA";
-    std::unordered_set<std::string> visited;
-    int res = dfs(start_pos,vss,30,0,visited);
+    int res = dfs("AA",30,0,0);
     return res;
 }
 
@@ -112,6 +112,11 @@ int main(int argc, char** argv)
     auto start = std::chrono::steady_clock::now();
     auto test_result = run("input_t1");
     std::cout<<"input_t1 result: "<<test_result<<'\n';
+    fs.clear();
+    neighss.clear();
+    dists.clear();
+    name2ind.clear();
+    cache.clear();
     auto result = run("input");
     std::cout<<"input result: "<<result<<'\n';
     auto end = std::chrono::steady_clock::now();
