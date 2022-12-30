@@ -20,16 +20,14 @@ std::map<std::string, int> name2ind;
 
 std::unordered_map<int, 
     std::unordered_map<std::string, 
-    std::unordered_map<size_t, 
-    std::unordered_map<int, int>>>> cache;
+    std::unordered_map<size_t, int>>> cache; 
 
 
-int dfs(std::string const & cr, int time, int fsf, size_t visited)
+int dfs(std::string const & cr, int time, size_t visited)
 {
-    if (cache[time][cr][visited][fsf] != 0)
-        return cache[time][cr][visited][fsf];
-    fsf += time * fs[cr];
-    int max = fsf;
+    if (cache[time][cr][visited] != 0)
+        return cache[time][cr][visited];
+    int max = time * fs[cr];
     for (auto n : dists[cr]) {
         size_t bit = 1L<<name2ind[n.first];
         if (visited & bit)
@@ -37,9 +35,9 @@ int dfs(std::string const & cr, int time, int fsf, size_t visited)
         int rem_t = time - n.second - 1;
         if (rem_t <= 0)
             continue;
-        max = std::max(max, dfs(n.first, rem_t, fsf, visited | bit));
+        max = std::max(max, dfs(n.first, rem_t, visited | bit) + time * fs[cr]);
     }
-    return cache[time][cr][visited][fsf] = max;
+    return cache[time][cr][visited] = max;
 }
 
 luint run(std::string const filename)
@@ -104,7 +102,7 @@ luint run(std::string const filename)
     //    std::cout<<"]\n";
     //}
 
-    int res = dfs("AA",30,0,0);
+    int res = dfs("AA",30,0);
     return res;
 }
 
