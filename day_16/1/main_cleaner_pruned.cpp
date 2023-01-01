@@ -9,8 +9,8 @@
 
 typedef long unsigned int luint;
 
-constexpr int ftime = 26;
-//constexpr int ftime = 30;
+//constexpr int ftime = 26;
+constexpr int ftime = 30;
 
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
@@ -115,18 +115,14 @@ luint run(std::string const filename)
     //data is now in global vectors
 
     vcache = std::vector(ftime+1, std::vector(name2ind.size(), std::unordered_map<short int, int>()));
+    prune = std::vector<std::vector<int>>(ftime+1, std::vector<int>(name2ind.size(), -1));
     int max = 0; 
     int start_pos = name2ind["AA"];
-    //std::cout<<"p1: "<<dfs(start_pos,ftime,0, 0)<<'\n';
-    for (short unsigned int i = 0;
-           i <= std::numeric_limits<short unsigned int>::max()/2 + 1; ++i) {
-        prune = std::vector<std::vector<int>>(ftime+1, std::vector<int>(name2ind.size(), -1));
-        int me = dfs(start_pos,ftime,i, 0);
-        prune = std::vector<std::vector<int>>(ftime+1, std::vector<int>(name2ind.size(), -1));
-        int el = dfs(start_pos,ftime,~i, 0);
-
-        max = std::max(max, me+el);
-    }
+    std::cout<<"p1: "<<dfs(start_pos,ftime,0, 0)<<'\n';
+    //for (short unsigned int i = 0;
+    //       i <= std::numeric_limits<short unsigned int>::max()/2 + 1; ++i) {
+    //    max = std::max(max, dfs(start_pos,ftime,i, 0) + dfs(start_pos,ftime,~i, 0));
+    //}
     return max;
 }
 
