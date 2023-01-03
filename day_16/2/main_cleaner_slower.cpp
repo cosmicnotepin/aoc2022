@@ -8,7 +8,18 @@
 #include <chrono>
 
 typedef long unsigned int luint;
-
+//typedef std::vector<std::vector<std::vector<std::unordered_map<short int, int>>>> Cache0;
+template <class T>
+using Cache1 = std::vector<T>;
+template <class T>
+using Cache2 = std::vector<Cache1<T>>;
+template <class T>
+using Cache3 = std::vector<Cache2<T>>;
+template <class T>
+using Cache4 = std::vector<Cache3<T>>;
+template <class T>
+using Cache5 = std::vector<Cache4<T>>;
+typedef std::unordered_map<short int, int> VisitedMap;
 constexpr int ftime = 26;
 //constexpr int ftime = 30;
 
@@ -19,32 +30,87 @@ template <typename T> int sgn(T val) {
 std::vector<int> vfs;
 std::vector<std::vector<int>> vdists;
 
-std::vector<std::vector<std::unordered_map<short int, int>>> vcache;
-std::vector<std::vector<int>> prune;
+Cache5<VisitedMap> vcache;
+Cache5<int> prune;
+//std::vector<std::vector<std::vector<int>>> prune;
 
-
-int dfs(int const & cr, int time, short int visited, int fsf)
+int arr_t_chkd(int const & cr, int const & n, int const & time, short int const & visited, short int & nbit)
 {
-    int max = time * vfs[cr];
-    fsf += max;
+    if (n == cr || vdists[cr][n] == 0)
+        return -1;
+    nbit = 1L<<n;
+    if (visited & nbit)
+        return -1;
+    return time - vdists[cr][n] - 1;
+}
+
+
+int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short int visited, int fsf)
+{
+    int max = 0;//time * vfs[cr];
+    //fsf += max;
     for (int i = time; i<=ftime; ++i)
-        if (prune[i][cr] > fsf)
+        if (prune[time][ce][cm][arr_te][arr_tm] > fsf)
             return 0;
-    prune[time][cr] = fsf;
-    if (vcache[time][cr][visited] != 0)
-        return vcache[time][cr][visited];
-    for (long int n=0; n<(int)vdists[cr].size(); ++n) {
-        if (n == cr || vdists[cr][n] == 0)
-            continue;
-        size_t bit = 1L<<n;
-        if (visited & bit)
-            continue;
-        int rem_t = time - vdists[cr][n] - 1;
-        if (rem_t <= 0)
-            continue;
-        max = std::max(max, dfs(n, rem_t, visited | bit, fsf) + time * vfs[cr]);
+    prune[time][ce][cm][arr_te][arr_tm] = fsf;
+    prune[time][cm][ce][arr_tm][arr_te] = fsf;
+    if (vcache[time][ce][cm][arr_te][arr_tm][visited] != 0)
+        return vcache[time][ce][cm][arr_te][arr_tm][visited];
+    if (arr_te == time && arr_tm == time) {
+        max = time * (vfs[cm] + vfs[ce]);
+        fsf += time * (vfs[cm] + vfs[ce]);
+        for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
+            short int nmbit;
+            int arr_tm = arr_t_chkd(cm,nm,time,visited,nmbit);
+            if (arr_tm <= 0)
+                continue;
+            for (long int ne=0; ne<(int)vdists[ce].size(); ++ne) {
+                short int nebit;
+                int arr_te = arr_t_chkd(ce,ne,time,visited,nebit);
+                if (arr_te <= 0)
+                    continue;
+                if (ce == nm || cm == ne || nm == ne)
+                    continue;
+                int final_arr_t = std::max(arr_te, arr_tm);
+                max = std::max(max, dfs(ne, nm, arr_te, arr_tm, final_arr_t, visited | nebit | nmbit, fsf) + time * (vfs[cm] + vfs[ce]));
+            }
+        }
+    } else if (arr_tm == time) {
+        max = time * vfs[cm];
+        fsf += time * vfs[cm];
+        bool stepped_down = false;
+        for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
+            short int nmbit;
+            int arr_tm = arr_t_chkd(cm,nm,time,visited,nmbit);
+            if (arr_tm <= 0)
+                continue;
+            int final_arr_t = std::max(arr_te, arr_tm);
+            stepped_down = true;
+            max = std::max(max, dfs(ce, nm, arr_te, arr_tm, final_arr_t, visited | nmbit, fsf) + time * vfs[cm]);
+        }
+        if (!stepped_down) {
+            max = std::max(max, dfs(ce, cm, arr_te, 0, arr_te, visited, fsf) + time * vfs[cm]);
+        }
+    } else if (arr_te == time) {
+        max = time * vfs[ce];
+        fsf += time * vfs[ce];
+        bool stepped_down = false;
+        for (long int ne=0; ne<(int)vdists[ce].size(); ++ne) {
+            short int nebit;
+            int arr_te = arr_t_chkd(ce,ne,time,visited,nebit);
+            if (arr_te <= 0)
+                continue;
+            int final_arr_t = std::max(arr_te, arr_tm);
+            stepped_down = true;
+            max = std::max(max, dfs(ne, cm, arr_te, arr_tm, final_arr_t, visited | nebit, fsf) + time * vfs[ce]);
+        }
+        if (!stepped_down) {
+            max = std::max(max, dfs(ce, cm, 0, arr_tm, arr_tm, visited, fsf) + time * vfs[ce]);
+        }
     }
-    return vcache[time][cr][visited] = max;
+    vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
+    return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
+    return max;
 }
 
 luint run(std::string const filename)
@@ -114,20 +180,22 @@ luint run(std::string const filename)
     }
     //data is now in global vectors
 
-    vcache = std::vector(ftime+1, std::vector(name2ind.size(), std::unordered_map<short int, int>()));
-    int max = 0; 
+    vcache = Cache5<VisitedMap>(ftime+1,
+            Cache4<VisitedMap>(name2ind.size(),
+            Cache3<VisitedMap>(name2ind.size(),
+            Cache2<VisitedMap>(ftime+1,
+            Cache1<VisitedMap>(ftime+1, VisitedMap())))));
+    prune = Cache5<int>(ftime+1,
+            Cache4<int>(name2ind.size(),
+            Cache3<int>(name2ind.size(),
+            Cache2<int>(ftime+1,
+            Cache1<int>(ftime+1, 0)))));
+    //prune = std::vector<std::vector<std::vector<int>>>(ftime+1,
+    //        std::vector<std::vector<int>>(name2ind.size(),
+    //            std::vector<int>(name2ind.size())));
     int start_pos = name2ind["AA"];
-    //std::cout<<"p1: "<<dfs(start_pos,ftime,0, 0)<<'\n';
-    for (short unsigned int i = 0;
-           i <= std::numeric_limits<short unsigned int>::max()/2 + 1; ++i) {
-        prune = std::vector<std::vector<int>>(ftime+1, std::vector<int>(name2ind.size(), -1));
-        int me = dfs(start_pos,ftime,i, 0);
-        prune = std::vector<std::vector<int>>(ftime+1, std::vector<int>(name2ind.size(), -1));
-        int el = dfs(start_pos,ftime,~i, 0);
 
-        max = std::max(max, me+el);
-    }
-    return max;
+    return dfs(start_pos, start_pos, ftime, ftime, ftime, 0, 0);
 }
 
 int main(int argc, char** argv)

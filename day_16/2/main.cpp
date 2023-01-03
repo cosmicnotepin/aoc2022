@@ -29,7 +29,6 @@ int dfs(int target, int etarget, int time, int res)
     for (int i = full_time; i >= time; --i)
     {
         if (vbrsf[i][target][etarget] != 0 && vbrsf[i][target][etarget] >= res) {
-            std::cout<<"pruned";
             return 0;
         }
     }
