@@ -41,17 +41,41 @@ int arr_t_chkd(int const & cr, int const & n, int const & time, short int const 
     return time - vdists[cr][n] - 1;
 }
 
+int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short int visited, int fsf);
+
+int move_second(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short int visited, int fsf)
+{
+    int max = time * vfs[cm];
+    fsf += time * vfs[cm];
+    bool stepped_down = false;
+    for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
+        short int nmbit;
+        int arr_tm = arr_t_chkd(cm,nm,time,visited,nmbit);
+        if (arr_tm <= 0)
+            continue;
+        int final_arr_t = std::max(arr_te, arr_tm);
+        stepped_down = true;
+        max = std::max(max, dfs(ce, nm, arr_te, arr_tm, final_arr_t, visited | nmbit, fsf) + time * vfs[cm]);
+    }
+    if (!stepped_down) {
+        max = std::max(max, dfs(ce, cm, arr_te, 0, arr_te, visited, fsf) + time * vfs[cm]);
+    }
+    return max;
+}
+
 
 int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short int visited, int fsf)
 {
-    int max = 0;
     for (int i = time; i<=ftime; ++i)
         if (prune[time][ce][cm][arr_te][arr_tm] > fsf)
             return 0;
     prune[time][ce][cm][arr_te][arr_tm] = fsf;
     prune[time][cm][ce][arr_tm][arr_te] = fsf;
+
+    int max = 0;
     if (vcache[time][ce][cm][arr_te][arr_tm][visited] != 0)
         return vcache[time][ce][cm][arr_te][arr_tm][visited];
+
     if (arr_te == time && arr_tm == time) {
         max = time * (vfs[cm] + vfs[ce]);
         fsf += time * (vfs[cm] + vfs[ce]);
@@ -105,38 +129,10 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short 
         }
     }
     if (arr_tm == time) {
-        max = time * vfs[cm];
-        fsf += time * vfs[cm];
-        bool stepped_down = false;
-        for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
-            short int nmbit;
-            int arr_tm = arr_t_chkd(cm,nm,time,visited,nmbit);
-            if (arr_tm <= 0)
-                continue;
-            int final_arr_t = std::max(arr_te, arr_tm);
-            stepped_down = true;
-            max = std::max(max, dfs(ce, nm, arr_te, arr_tm, final_arr_t, visited | nmbit, fsf) + time * vfs[cm]);
-        }
-        if (!stepped_down) {
-            max = std::max(max, dfs(ce, cm, arr_te, 0, arr_te, visited, fsf) + time * vfs[cm]);
-        }
+        max = move_second(ce, cm, arr_te, arr_tm, time, visited, fsf);
     }
     if (arr_te == time) {
-        max = time * vfs[ce];
-        fsf += time * vfs[ce];
-        bool stepped_down = false;
-        for (long int ne=0; ne<(int)vdists[ce].size(); ++ne) {
-            short int nebit;
-            int arr_te = arr_t_chkd(ce,ne,time,visited,nebit);
-            if (arr_te <= 0)
-                continue;
-            int final_arr_t = std::max(arr_te, arr_tm);
-            stepped_down = true;
-            max = std::max(max, dfs(ne, cm, arr_te, arr_tm, final_arr_t, visited | nebit, fsf) + time * vfs[ce]);
-        }
-        if (!stepped_down) {
-            max = std::max(max, dfs(ce, cm, 0, arr_tm, arr_tm, visited, fsf) + time * vfs[ce]);
-        }
+        max = move_second(cm, ce, arr_tm, arr_te, time, visited, fsf);
     }
     vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
     return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
