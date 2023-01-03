@@ -7,8 +7,6 @@
 #include <unordered_set>
 #include <chrono>
 
-typedef long unsigned int luint;
-//typedef std::vector<std::vector<std::vector<std::unordered_map<short int, int>>>> Cache0;
 template <class T>
 using Cache1 = std::vector<T>;
 template <class T>
@@ -32,7 +30,6 @@ std::vector<std::vector<int>> vdists;
 
 Cache5<VisitedMap> vcache;
 Cache5<int> prune;
-//std::vector<std::vector<std::vector<int>>> prune;
 
 int arr_t_chkd(int const & cr, int const & n, int const & time, short int const & visited, short int & nbit)
 {
@@ -47,8 +44,7 @@ int arr_t_chkd(int const & cr, int const & n, int const & time, short int const 
 
 int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short int visited, int fsf)
 {
-    int max = 0;//time * vfs[cr];
-    //fsf += max;
+    int max = 0;
     for (int i = time; i<=ftime; ++i)
         if (prune[time][ce][cm][arr_te][arr_tm] > fsf)
             return 0;
@@ -59,6 +55,7 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short 
     if (arr_te == time && arr_tm == time) {
         max = time * (vfs[cm] + vfs[ce]);
         fsf += time * (vfs[cm] + vfs[ce]);
+        bool stepped_down = false;
         for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
             short int nmbit;
             int arr_tm = arr_t_chkd(cm,nm,time,visited,nmbit);
@@ -72,10 +69,42 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short 
                 if (ce == nm || cm == ne || nm == ne)
                     continue;
                 int final_arr_t = std::max(arr_te, arr_tm);
+                stepped_down = true;
                 max = std::max(max, dfs(ne, nm, arr_te, arr_tm, final_arr_t, visited | nebit | nmbit, fsf) + time * (vfs[cm] + vfs[ce]));
             }
         }
-    } else if (arr_tm == time) {
+        if (stepped_down)
+        {
+            vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
+            return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
+        } else {
+            bool at_least_one_e = false;
+            for (long int ne=0; ne<(int)vdists[ce].size(); ++ne) {
+                short int nebit;
+                if(arr_t_chkd(ce,ne,time,visited,nebit) <= 0)
+                    continue;
+                at_least_one_e = true;
+                break;
+            }
+            bool at_least_one_m = false;
+            for (long int nm=0; nm<(int)vdists[cm].size(); ++nm) {
+                short int nmbit;
+                if(arr_t_chkd(cm,nm,time,visited,nmbit) <= 0)
+                    continue;
+                at_least_one_m = true;
+                break;
+            }
+            if (at_least_one_e && !at_least_one_m)
+                arr_tm = 0;
+            if (at_least_one_m && !at_least_one_e)
+                arr_te = 0;
+            if (!at_least_one_e && !at_least_one_m) {
+                vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
+                return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
+            }
+        }
+    }
+    if (arr_tm == time) {
         max = time * vfs[cm];
         fsf += time * vfs[cm];
         bool stepped_down = false;
@@ -91,7 +120,8 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short 
         if (!stepped_down) {
             max = std::max(max, dfs(ce, cm, arr_te, 0, arr_te, visited, fsf) + time * vfs[cm]);
         }
-    } else if (arr_te == time) {
+    }
+    if (arr_te == time) {
         max = time * vfs[ce];
         fsf += time * vfs[ce];
         bool stepped_down = false;
@@ -110,10 +140,9 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, short 
     }
     vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
     return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
-    return max;
 }
 
-luint run(std::string const filename)
+int run(std::string const filename)
 {
     std::ifstream ifs {filename};
 
@@ -190,9 +219,6 @@ luint run(std::string const filename)
             Cache3<int>(name2ind.size(),
             Cache2<int>(ftime+1,
             Cache1<int>(ftime+1, 0)))));
-    //prune = std::vector<std::vector<std::vector<int>>>(ftime+1,
-    //        std::vector<std::vector<int>>(name2ind.size(),
-    //            std::vector<int>(name2ind.size())));
     int start_pos = name2ind["AA"];
 
     return dfs(start_pos, start_pos, ftime, ftime, ftime, 0, 0);
