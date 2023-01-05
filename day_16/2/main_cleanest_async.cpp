@@ -107,15 +107,23 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, int vi
         for (auto td_m : todos_m) {
             if (td_e.target == td_m.target)
                 continue;
-            futs.emplace_back(std::async(dfs, td_e.target, td_m.target, td_e.arr_t, td_m.arr_t,
-                        std::max(td_e.arr_t, td_m.arr_t), 
-                        visited | td_e.bit | td_m.bit, fsf + td_e.flow + td_m.flow));// + td_e.flow + td_m.flow);
+            if (time > 25) {
+                futs.emplace_back(std::async(dfs, td_e.target, td_m.target, td_e.arr_t, td_m.arr_t,
+                            std::max(td_e.arr_t, td_m.arr_t), 
+                            visited | td_e.bit | td_m.bit, fsf + td_e.flow + td_m.flow));// + td_e.flow + td_m.flow);
+            } else {
+                max = std::max(max, dfs(td_e.target, td_m.target, td_e.arr_t, td_m.arr_t,
+                            std::max(td_e.arr_t, td_m.arr_t), 
+                            visited | td_e.bit | td_m.bit, fsf + td_e.flow + td_m.flow));
+            }
         }
     }
     //auto gett = [](std::future<int> fut) {return fut.get();};
     //max = std::transform_reduce(futs.begin(), futs.end(), 0, std::max, gett);
-    for (auto & fut : futs)
-        max = std::max(max,fut.get());
+    if (time > 25) {
+        for (auto & fut : futs)
+            max = std::max(max,fut.get());
+    }
     max +=  + todos_e[0].flow + todos_m[0].flow;
     {
         std::unique_lock {vcache_mutex};
