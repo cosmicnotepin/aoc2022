@@ -6,6 +6,10 @@
 #include <string>
 #include <unordered_set>
 #include <chrono>
+#include <shared_mutex>
+#include <mutex>
+#include <future>
+#include <numeric>
 
 template <class T>
 using Cache1 = std::vector<T>;
@@ -35,7 +39,10 @@ struct Todo {
 std::vector<int> vfs;
 std::vector<std::vector<int>> vdists;
 
+std::shared_mutex vcache_mutex;
 Cache5<VisitedMap> vcache;
+
+std::shared_mutex prune_mutex;
 Cache5<int> prune;
 
 int arr_t_chkd(int const & cr, int const & n, int const & time, int const & visited, int & nbit)
@@ -73,31 +80,48 @@ int dfs(int const & ce, int const & cm, int arr_te, int arr_tm, int time, int vi
 {
     if (arr_te == 0 && arr_tm == 0)
         return 0;
-    for (int i = time; i<=ftime; ++i)
-        if (prune[time][ce][cm][arr_te][arr_tm] > fsf)
-            return 0;
-    prune[time][ce][cm][arr_te][arr_tm] = fsf;
-    prune[time][cm][ce][arr_tm][arr_te] = fsf;
 
-    if (vcache[time][ce][cm][arr_te][arr_tm][visited] != 0)
-        return vcache[time][ce][cm][arr_te][arr_tm][visited];
+    {
+        std::shared_lock lck {prune_mutex};
+        for (int i = time; i<=ftime; ++i)
+            if (prune[time][ce][cm][arr_te][arr_tm] > fsf)
+                return 0;
+    }
+    {
+        std::unique_lock lck {prune_mutex};
+        prune[time][ce][cm][arr_te][arr_tm] = fsf;
+        prune[time][cm][ce][arr_tm][arr_te] = fsf;
+    }
+
+    {
+        std::shared_lock lck {vcache_mutex};
+        if (vcache[time][ce][cm][arr_te][arr_tm][visited] != 0)
+            return vcache[time][ce][cm][arr_te][arr_tm][visited];
+    }
 
     int max = 0;
     auto todos_e = g_todos(ce, arr_te, time, visited);
     auto todos_m = g_todos(cm, arr_tm, time, visited);
-    int new_flow = todos_e[0].flow + todos_m[0].flow;
+    std::vector<std::future<int>> futs;
     for (auto td_e : todos_e) {
         for (auto td_m : todos_m) {
             if (td_e.target == td_m.target)
                 continue;
-            max = std::max(max, dfs(td_e.target, td_m.target, td_e.arr_t, td_m.arr_t,
+            futs.emplace_back(std::async(dfs, td_e.target, td_m.target, td_e.arr_t, td_m.arr_t,
                         std::max(td_e.arr_t, td_m.arr_t), 
-                        visited | td_e.bit | td_m.bit, fsf + new_flow));
+                        visited | td_e.bit | td_m.bit, fsf + td_e.flow + td_m.flow));// + td_e.flow + td_m.flow);
         }
     }
-    max += new_flow;
-    vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
-    return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
+    //auto gett = [](std::future<int> fut) {return fut.get();};
+    //max = std::transform_reduce(futs.begin(), futs.end(), 0, std::max, gett);
+    for (auto & fut : futs)
+        max = std::max(max,fut.get());
+    max +=  + todos_e[0].flow + todos_m[0].flow;
+    {
+        std::unique_lock {vcache_mutex};
+        vcache[time][cm][ce][arr_tm][arr_te][visited] = max;
+        return vcache[time][ce][cm][arr_te][arr_tm][visited] = max;
+    }
 }
 
 int run(std::string const filename)
